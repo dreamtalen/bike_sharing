@@ -72,8 +72,14 @@ class NeuralNetwork(object):
 def MSE(y, Y):
     return np.mean((y-Y)**2)
 
+def nonNeg(x):
+    if x > 0:
+        return x
+    else:
+        return 0
+
 def RMSLE(predict_list, actual_list):
-    return (sum((math.log(p + 1) - math.log(a + 1))**2 for p, a in zip(predict_list, actual_list))/len(predict_list))**0.5
+    return (sum((math.log(nonNeg(p) + 1) - math.log(nonNeg(a) + 1))**2 for p, a in zip(predict_list, actual_list))/len(predict_list))**0.5
 
 
 def main():
@@ -139,8 +145,8 @@ def main():
             network.train(record, target)
 
         # Printing out the training progress
-        train_loss = MSE(network.run(train_features), train_targets['cnt'].values)
-        val_loss = MSE(network.run(val_features), val_targets['cnt'].values)
+        train_loss = RMSLE(network.run(train_features)[0], train_targets['cnt'].values)
+        val_loss = RMSLE(network.run(val_features)[0], val_targets['cnt'].values)
         sys.stdout.write("\rProgress: " + str(100 * e/float(epochs))[:4] \
                          + "% ... Training loss: " + str(train_loss)[:5] \
                          + " ... Validation loss: " + str(val_loss)[:5] + '\n')
@@ -157,7 +163,6 @@ def main():
 
     mean, std = scaled_features['cnt']
     predictions = network.run(test_features)*std + mean
-    predictions[0] = [i if i > 0 else 0.0 for i in predictions[0]]
     ax.plot(predictions[0], label='Prediction')
     ax.plot((test_targets['cnt']*std + mean).values, label='Data')
     ax.set_xlim(right=len(predictions))

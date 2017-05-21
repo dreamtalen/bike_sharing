@@ -89,10 +89,10 @@ def main():
                                                                       combiner="sum"))
     # DNN-Regressor
     regressor = tf.contrib.learn.DNNRegressor(
-        feature_columns=engineered_features, hidden_units=[10, 10], model_dir=MODEL_DIR)
+        feature_columns=engineered_features, hidden_units=[20, 20, 20, 20, 20, 20, 20], model_dir=MODEL_DIR)
 
     # Training Our Model
-    wrap = regressor.fit(input_fn=train_input_fn, steps=500)
+    wrap = regressor.fit(input_fn=train_input_fn, steps=300)
 
     # Evaluating Our Model
     print('Evaluating ...')

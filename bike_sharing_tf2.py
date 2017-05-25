@@ -25,14 +25,18 @@ def main():
     categorical_features = ['season',  'holiday',  'workingday', 'weathersit', 'mnth', 'weekday']
 
 
-    test_data = data[-21*24:]
-    data = data[:-21*24]
+    # test_data = data[-21*24:]
+    # data = data[:-21*24]
+    # train_data = data[:-60*24]
+    # val_data = data[-60*24:]
+
+
     # Splitting the data into training, testing, and validation sets
     # Separate the data into features and targets
     # Hold out the last 60 days of the remaining data as a validation set
 
-    train_data = data[:-60*24]
-    val_data = data[-60*24:]
+    test_data = data[-42*24:]
+    train_data = data[:-42*24]
 
     # Converting Data into Tensors
 
@@ -89,26 +93,55 @@ def main():
                                                                       combiner="sum"))
     # DNN-Regressor
     regressor = tf.contrib.learn.DNNRegressor(
-        feature_columns=engineered_features, hidden_units=[20, 20, 20, 20, 20, 20, 20], model_dir=MODEL_DIR)
+        feature_columns=engineered_features, hidden_units=[100, 50], model_dir=MODEL_DIR, activation_fn=tf.nn.elu)
 
     # Training Our Model
-    wrap = regressor.fit(input_fn=train_input_fn, steps=300)
+    step = 100
+    losses = {'train':[], 'test':[]}
+    for train_time in range(50):
+        start_time = time.time()
 
+        wrap = regressor.fit(input_fn=train_input_fn, steps=step)
+
+        end_time = time.time()
+
+        predicted_output = regressor.predict(input_fn=lambda : input_fn(train_data, False))
+        predicted_output = [i if i > 0 else 0 for i in predicted_output]
+        train_loss = RMSLE(predicted_output, train_data[LABEL_COLUMN])
+
+        predicted_output_test = regressor.predict(input_fn=test_input_fn)
+        predicted_output_test = [i if i > 0 else 0 for i in predicted_output_test]
+        test_loss = RMSLE(predicted_output_test, test_data[LABEL_COLUMN])
+
+        losses['train'].append(train_loss)
+        losses['test'].append(test_loss)
+
+        print train_time, train_loss, test_loss, end_time-start_time
+
+    plt.plot(losses['train'], label='Training loss')
+    plt.plot(losses['test'], label='Test loss')
+    plt.legend()
+    # plt.show()
+
+    # time.sleep(1000)
     # Evaluating Our Model
-    print('Evaluating ...')
-    results = regressor.evaluate(input_fn=eval_input_fn, steps=1)
-    for key in sorted(results):
-        print("%s: %s" % (key, results[key]))
+    # print('Evaluating ...')
+    # results = regressor.evaluate(input_fn=eval_input_fn, steps=1)
+    # for key in sorted(results):
+    #     print("%s: %s" % (key, results[key]))
+
+    # test_input_fn = train_input_fn
+    # test_data = train_data
 
     predicted_output = regressor.predict(input_fn=test_input_fn)
-
+    # for i in predicted_output:  print i
     predicted_output = [i if i > 0 else 0 for i in predicted_output]
     print RMSLE(predicted_output, test_data[LABEL_COLUMN])
 
     predictions = predicted_output
     targets = list(test_data[LABEL_COLUMN])
 
-    fig, ax = plt.subplots(figsize=(8,4))
+    fig, ax = plt.subplots(figsize=(128,8))
 
     ax.plot(predictions, label='Prediction')
     ax.plot(targets, label='Data')

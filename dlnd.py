@@ -114,8 +114,8 @@ def main():
     # Splitting the data into training, testing, and validation sets
 
     # Save the last 21 days
-    test_data = data[-21*24:]
-    data = data[:-21*24]
+    test_data = data[-42*24:]
+    data = data[:-42*24]
 
     # Separate the data into features and targets
     target_fields = ['cnt', 'casual', 'registered']
@@ -123,12 +123,12 @@ def main():
     test_features, test_targets = test_data.drop(target_fields, axis=1), test_data[target_fields]
 
     # Hold out the last 60 days of the remaining data as a validation set
-    train_features, train_targets = features[:-60*24], targets[:-60*24]
-    val_features, val_targets = features[-60*24:], targets[-60*24:]
+    train_features, train_targets = features[:-30*24], targets[:-30*24]
+    val_features, val_targets = features[-30*24:], targets[-30*24:]
 
     # print train_features.head()
 
-    epochs = 300
+    epochs = 1000
     learning_rate = 0.075
     hidden_nodes = 15
     output_nodes = 1

@@ -36,8 +36,8 @@ def main():
     # Separate the data into features and targets
     # Hold out the last 60 days of the remaining data as a validation set
 
-    test_data = data[-28*24:]
-    train_data = data[:-28*24]
+    test_data = data[-31*24:]
+    train_data = data[:-31*24]
 
     # Converting Data into Tensors
 
@@ -94,12 +94,12 @@ def main():
                                                                       combiner="sum"))
     # DNN-Regressor
     regressor = tf.contrib.learn.DNNRegressor(
-        feature_columns=engineered_features, hidden_units=[200, 200, 200, 100, 100, 100], model_dir=MODEL_DIR, activation_fn=tf.nn.elu)
+        feature_columns=engineered_features, hidden_units=[200, 200, 200, 200, 200, 200, 200, 200], model_dir=MODEL_DIR, activation_fn=tf.nn.elu)
 
     # Training Our Model
-    step = 100
+    step = 10
     losses = {'train':[], 'test':[]}
-    for train_time in range(200):
+    for train_time in range(2000):
         start_time = time.time()
 
         wrap = regressor.fit(input_fn=train_input_fn, steps=step)

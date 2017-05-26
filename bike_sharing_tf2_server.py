@@ -6,7 +6,8 @@ import warnings
 warnings.filterwarnings("ignore")
 import math
 import time
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
+import pickle
 
 def RMSLE(predict_list, actual_list):
     return (sum((math.log(p + 1) - math.log(a + 1))**2 for p, a in zip(predict_list, actual_list))/len(predict_list))**0.5
@@ -14,7 +15,7 @@ def RMSLE(predict_list, actual_list):
 def main():
     # Load and prepare the data
     data_path = 'Bike-Sharing-Dataset/hour2.csv'
-    MODEL_DIR = 'Models2/'
+    MODEL_DIR = 'Models2_server/'
     rides = pd.read_csv(data_path)
 
     fields_to_drop = ['instant', 'dteday', 'yr', 'casual', 'registered']
@@ -98,7 +99,7 @@ def main():
     # Training Our Model
     step = 100
     losses = {'train':[], 'test':[]}
-    for train_time in range(50):
+    for train_time in range(200):
         start_time = time.time()
 
         wrap = regressor.fit(input_fn=train_input_fn, steps=step)
@@ -118,9 +119,11 @@ def main():
 
         print train_time, train_loss, test_loss, end_time-start_time
 
-    plt.plot(losses['train'], label='Training loss')
-    plt.plot(losses['test'], label='Test loss')
-    plt.legend()
+
+
+    # plt.plot(losses['train'], label='Training loss')
+    # plt.plot(losses['test'], label='Test loss')
+    # plt.legend()
     # plt.show()
 
     # time.sleep(1000)
@@ -141,18 +144,23 @@ def main():
     predictions = predicted_output
     targets = list(test_data[LABEL_COLUMN])
 
-    fig, ax = plt.subplots(figsize=(64,8))
+    losses['predictions'] = predictions
+    losses['targets'] = targets
 
-    ax.plot(predictions, label='Prediction')
-    ax.plot(targets, label='Data')
-    ax.set_xlim(right=len(predictions))
-    ax.legend()
-
-    dates = pd.to_datetime(rides.ix[test_data.index]['dteday'])
-    dates = dates.apply(lambda d: d.strftime('%b %d'))
-    ax.set_xticks(np.arange(len(dates))[12::24])
-    _ = ax.set_xticklabels(dates[12::24], rotation=45)
-    plt.show()
+    with open('tf2_result'+time.strftime('%m-%d_%H-%M-%S',time.localtime(time.time())), 'wb') as f:
+        pickle.dump(losses, f)
+    # fig, ax = plt.subplots(figsize=(64,8))
+    #
+    # ax.plot(predictions, label='Prediction')
+    # ax.plot(targets, label='Data')
+    # ax.set_xlim(right=len(predictions))
+    # ax.legend()
+    #
+    # dates = pd.to_datetime(rides.ix[test_data.index]['dteday'])
+    # dates = dates.apply(lambda d: d.strftime('%b %d'))
+    # ax.set_xticks(np.arange(len(dates))[12::24])
+    # _ = ax.set_xticklabels(dates[12::24], rotation=45)
+    # plt.show()
 
 if __name__ == '__main__':
     main()

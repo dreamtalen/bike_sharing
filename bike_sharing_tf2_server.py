@@ -97,9 +97,9 @@ def main():
         feature_columns=engineered_features, hidden_units=[200, 200, 200, 200, 200, 200, 200, 200], model_dir=MODEL_DIR, activation_fn=tf.nn.elu)
 
     # Training Our Model
-    step = 10
+    step = 100
     losses = {'train':[], 'test':[]}
-    for train_time in range(2000):
+    for train_time in range(200):
         start_time = time.time()
 
         wrap = regressor.fit(input_fn=train_input_fn, steps=step)

@@ -6,21 +6,24 @@ import sys
 import math
 
 class NeuralNetwork(object):
-    def __init__(self, input_nodes, hidden_nodes, output_nodes, learning_rate):
+    def __init__(self, input_nodes, hidden1_nodes, hidden2_nodes, output_nodes, learning_rate):
         # Set number of nodes in input, hidden and output layers.
         self.input_nodes = input_nodes
-        self.hidden_nodes = hidden_nodes
+        self.hidden1_nodes = hidden1_nodes
+        self.hidden2_nodes = hidden2_nodes
         self.output_nodes = output_nodes
 
         # Initialize weights
-        self.weights_input_to_hidden = np.random.normal(0.0, self.hidden_nodes**-0.5,
-                                       (self.hidden_nodes, self.input_nodes))
+        self.weights_input_to_hidden1 = np.random.normal(0.0, self.hidden1_nodes**-0.5,
+                                       (self.hidden1_nodes, self.input_nodes))
 
-        self.weights_hidden_to_output = np.random.normal(0.0, self.output_nodes**-0.5,
-                                       (self.output_nodes, self.hidden_nodes))
+        self.weights_hidden1_to_hidden2 = np.random.normal(0.0, self.hidden2_nodes**-0.5,
+                                       (self.hidden2_nodes, self.hidden1_nodes))
+
+        self.weights_hidden2_to_output = np.random.normal(0.0, self.output_nodes**-0.5,
+                                       (self.output_nodes, self.hidden2_nodes))
         self.lr = learning_rate
 
-        #### Set this to your implemented sigmoid function ####
         # Activation function is the sigmoid function
         self.activation_function = lambda x: 1 / (1 + np.exp(-x))
 
@@ -29,42 +32,51 @@ class NeuralNetwork(object):
         inputs = np.array(inputs_list, ndmin=2).T
         targets = np.array(targets_list, ndmin=2).T
 
-        #### Implement the forward pass here ####
         ### Forward pass ###
-        # TODO: Hidden layer
-        hidden_inputs = np.dot(self.weights_input_to_hidden, inputs)
-        hidden_outputs = self.activation_function(hidden_inputs)
+        # Hidden layer 1
+        hidden1_inputs = np.dot(self.weights_input_to_hidden1, inputs)
+        hidden1_outputs = self.activation_function(hidden1_inputs)
 
-        # TODO: Output layer
-        final_inputs = np.dot(self.weights_hidden_to_output, hidden_outputs)
+        # Hidden layer 2
+        hidden2_inputs = np.dot(self.weights_hidden1_to_hidden2, hidden1_outputs)
+        hidden2_outputs = self.activation_function(hidden2_inputs)
+
+        # Output layer
+        final_inputs = np.dot(self.weights_hidden2_to_output, hidden2_outputs)
         final_outputs = final_inputs
 
-        #### Implement the backward pass here ####
         ### Backward pass ###
-
-        # TODO: Output error
+        # Output error
         output_errors = targets - final_outputs
 
-        # TODO: Backpropagated error
-        hidden_errors = np.dot(self.weights_hidden_to_output.T, output_errors)
-        hidden_grad = hidden_errors * hidden_outputs * (1 - hidden_outputs)
+        # Backpropagated error
+        hidden2_errors = np.dot(self.weights_hidden2_to_output.T, output_errors)
+        hidden2_grad = hidden2_errors * hidden2_outputs * (1 - hidden2_outputs)
 
-        # TODO: Update the weights
-        self.weights_hidden_to_output += self.lr * output_errors * hidden_outputs.T
-        self.weights_input_to_hidden += self.lr * hidden_grad * inputs.T
+        hidden1_errors = np.dot(self.weights_hidden1_to_hidden2.T, hidden2_errors)
+        hidden1_grad = hidden1_errors * hidden1_outputs * (1 - hidden1_outputs)
+
+        #  Update the weights
+        self.weights_hidden2_to_output += self.lr * output_errors * hidden2_outputs.T
+        self.weights_hidden1_to_hidden2 += self.lr * hidden2_grad * hidden1_outputs.T
+        self.weights_input_to_hidden1 += self.lr * hidden1_grad * inputs.T
 
 
     def run(self, inputs_list):
         # Run a forward pass through the network
         inputs = np.array(inputs_list, ndmin=2).T
 
-        #### Implement the forward pass here ####
-        # TODO: Hidden layer
-        hidden_inputs = np.dot(self.weights_input_to_hidden, inputs)
-        hidden_outputs = self.activation_function(hidden_inputs)
+        ### Forward pass ###
+        # Hidden layer 1
+        hidden1_inputs = np.dot(self.weights_input_to_hidden1, inputs)
+        hidden1_outputs = self.activation_function(hidden1_inputs)
 
-        # TODO: Output layer
-        final_inputs = np.dot(self.weights_hidden_to_output, hidden_outputs)
+        # Hidden layer 2
+        hidden2_inputs = np.dot(self.weights_hidden1_to_hidden2, hidden1_outputs)
+        hidden2_outputs = self.activation_function(hidden2_inputs)
+
+        # Output layer
+        final_inputs = np.dot(self.weights_hidden2_to_output, hidden2_outputs)
         final_outputs = final_inputs
 
         return final_outputs
@@ -114,8 +126,8 @@ def main():
     # Splitting the data into training, testing, and validation sets
 
     # Save the last 21 days
-    test_data = data[-42*24:]
-    data = data[:-42*24]
+    test_data = data[-31*24:]
+    data = data[:-31*24]
 
     # Separate the data into features and targets
     target_fields = ['cnt', 'casual', 'registered']
@@ -123,20 +135,22 @@ def main():
     test_features, test_targets = test_data.drop(target_fields, axis=1), test_data[target_fields]
 
     # Hold out the last 60 days of the remaining data as a validation set
-    train_features, train_targets = features[:-30*24], targets[:-30*24]
-    val_features, val_targets = features[-30*24:], targets[-30*24:]
+    train_features, train_targets = features, targets
+    # val_features, val_targets = features[-30*24:], targets[-30*24:]
 
     # print train_features.head()
 
-    epochs = 1000
+    epochs = 5000
     learning_rate = 0.075
-    hidden_nodes = 15
+    hidden1_nodes = 50
+    hidden2_nodes = 50
     output_nodes = 1
 
     N_i = train_features.shape[1]
-    network = NeuralNetwork(N_i, hidden_nodes, output_nodes, learning_rate)
+    network = NeuralNetwork(N_i, hidden1_nodes, hidden2_nodes, output_nodes, learning_rate)
 
-    losses = {'train':[], 'validation':[]}
+    losses = {'train':[], 'test':[]}
+    mean, std = scaled_features['cnt']
     for e in range(epochs):
         # Go through a random batch of 128 records from the training data set
         batch = np.random.choice(train_features.index, size=128)
@@ -145,18 +159,19 @@ def main():
             network.train(record, target)
 
         # Printing out the training progress
-        train_loss = RMSLE(network.run(train_features)[0], train_targets['cnt'].values)
-        val_loss = RMSLE(network.run(val_features)[0], val_targets['cnt'].values)
+        train_loss = RMSLE(network.run(train_features)[0]*std+mean, train_targets['cnt'].values*std+mean)
+        # print network.run(train_features)[0]*std+mean
+        test_loss = RMSLE(network.run(test_features)[0]*std+mean, test_targets['cnt'].values*std+mean)
         sys.stdout.write("\rProgress: " + str(100 * e/float(epochs))[:4] \
                          + "% ... Training loss: " + str(train_loss)[:5] \
-                         + " ... Validation loss: " + str(val_loss)[:5] + '\n')
+                         + " ... Test loss: " + str(test_loss)[:5] + '\n')
 
         losses['train'].append(train_loss)
-        losses['validation'].append(val_loss)
+        losses['test'].append(test_loss)
     plt.plot(losses['train'], label='Training loss')
-    plt.plot(losses['validation'], label='Validation loss')
+    plt.plot(losses['test'], label='Test loss')
     plt.legend()
-    plt.ylim(ymax=0.5)
+    plt.ylim(ymax=1.5)
 
 
     fig, ax = plt.subplots(figsize=(8,4))
@@ -173,7 +188,7 @@ def main():
     ax.set_xticks(np.arange(len(dates))[12::24])
     _ = ax.set_xticklabels(dates[12::24], rotation=45)
 
-    print MSE(predictions[0], test_targets['cnt']*std + mean)
+    # print MSE(predictions[0], test_targets['cnt']*std + mean)
     print RMSLE(predictions[0], test_targets['cnt']*std + mean)
     # print len(predictions[0])
     plt.show()

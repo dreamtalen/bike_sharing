@@ -161,13 +161,19 @@ def main():
         train_loss = RMSLE(network.run(train_features)[0]*std+mean, train_targets['cnt'].values*std+mean)
         # print network.run(train_features)[0]*std+mean
         test_loss = RMSLE(network.run(test_features)[0]*std+mean, test_targets['cnt'].values*std+mean)
-        if not e % 500:
+
+        losses['train'].append(train_loss)
+        losses['test'].append(test_loss)
+
+        if not e % 250:
             sys.stdout.write("\rProgress: " + str(100 * e/float(epochs))[:4] \
                          + "% ... Training loss: " + str(train_loss)[:5] \
                          + " ... Test loss: " + str(test_loss)[:5] + '\n')
 
-        losses['train'].append(train_loss)
-        losses['test'].append(test_loss)
+        if not e % 1000:
+            part_test_loss_list = losses['test'][-100:]
+            print 'Step', str(e), 'test loss', sum(part_test_loss_list)/len(part_test_loss_list)
+
 
     final_test_loss_list = losses['test'][-100:]
     print 'Final test loss', sum(final_test_loss_list)/len(final_test_loss_list)

@@ -4,6 +4,19 @@ import pandas as pd
 import sys
 import math
 
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('hidden1')
+parser.add_argument('hidden2')
+parser.add_argument('learning_rate')
+
+args = parser.parse_args()
+
+hidden1_nodes = int(args.hidden1)
+hidden2_nodes = int(args.hidden2)
+learning_rate = float(args.learning_rate)
+
+
 class NeuralNetwork(object):
     def __init__(self, input_nodes, hidden1_nodes, hidden2_nodes, output_nodes, learning_rate):
         # Set number of nodes in input, hidden and output layers.
@@ -140,9 +153,10 @@ def main():
     # print train_features.head()
 
     epochs = 5000
-    learning_rate = 0.075
-    hidden1_nodes = 20
-    hidden2_nodes = 20
+    # learning_rate = 0.075
+    print hidden1_nodes, hidden2_nodes, learning_rate
+    # hidden1_nodes = 20
+    # hidden2_nodes = 20
     output_nodes = 1
 
     N_i = train_features.shape[1]

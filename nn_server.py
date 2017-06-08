@@ -125,8 +125,8 @@ def main():
     # Splitting the data into training, testing, and validation sets
 
     # Save the last 21 days
-    test_data = data[-36*24:-10*24]
-    data = data[:-36*24]
+    test_data = data[-28*24:]
+    data = data[:-28*24]
 
     # Separate the data into features and targets
     target_fields = ['cnt', 'casual', 'registered']

@@ -184,14 +184,10 @@ def main():
                          + "% ... Training loss: " + str(train_loss)[:5] \
                          + " ... Test loss: " + str(test_loss)[:5] + '\n')
 
-        if e and not e % 1000:
+        if not e + 1 % 1000:
             part_test_loss_list = losses['test'][-100:]
             # print 'Step', str(e), 'test loss', sum(part_test_loss_list)/len(part_test_loss_list)
             print 'Step', str(e), 'test loss', min(part_test_loss_list)
-
-
-    final_test_loss_list = losses['test'][-100:]
-    print 'Final test loss', sum(final_test_loss_list)/len(final_test_loss_list)
 
 if __name__ == '__main__':
     main()

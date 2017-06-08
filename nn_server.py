@@ -186,7 +186,8 @@ def main():
 
         if e and not e % 1000:
             part_test_loss_list = losses['test'][-100:]
-            print 'Step', str(e), 'test loss', sum(part_test_loss_list)/len(part_test_loss_list)
+            # print 'Step', str(e), 'test loss', sum(part_test_loss_list)/len(part_test_loss_list)
+            print 'Step', str(e), 'test loss', min(part_test_loss_list)
 
 
     final_test_loss_list = losses['test'][-100:]

@@ -141,8 +141,8 @@ def main():
 
     epochs = 5000
     learning_rate = 0.075
-    hidden1_nodes = 100
-    hidden2_nodes = 100
+    hidden1_nodes = 20
+    hidden2_nodes = 20
     output_nodes = 1
 
     N_i = train_features.shape[1]
@@ -170,7 +170,7 @@ def main():
                          + "% ... Training loss: " + str(train_loss)[:5] \
                          + " ... Test loss: " + str(test_loss)[:5] + '\n')
 
-        if not e % 1000:
+        if e and not e % 1000:
             part_test_loss_list = losses['test'][-100:]
             print 'Step', str(e), 'test loss', sum(part_test_loss_list)/len(part_test_loss_list)
 

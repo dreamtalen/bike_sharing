@@ -14,7 +14,7 @@ def RMSLE(predict_list, actual_list):
 def main():
     # Load and prepare the data
     data_path = 'Bike-Sharing-Dataset/hour2.csv'
-    MODEL_DIR = 'Models2/'
+    MODEL_DIR = 'Models2_505050/'
     rides = pd.read_csv(data_path)
 
     fields_to_drop = ['instant', 'dteday', 'yr', 'casual', 'registered']
@@ -24,32 +24,19 @@ def main():
     continuous_features = ['temp', 'atemp', 'hum', 'windspeed', 'hr']
     categorical_features = ['season',  'holiday',  'workingday', 'weathersit', 'mnth', 'weekday']
 
-
-    # test_data = data[-21*24:]
-    # data = data[:-21*24]
-    # train_data = data[:-60*24]
-    # val_data = data[-60*24:]
-
-
     # Splitting the data into training, testing, and validation sets
-    # Separate the data into features and targets
-    # Hold out the last 60 days of the remaining data as a validation set
 
     test_data = data[-28*24:]
     train_data = data[:-28*24]
 
     # Converting Data into Tensors
-
     LABEL_COLUMN = 'cnt'
     def input_fn(df, training = True):
-        # Creates a dictionary mapping from each continuous feature column name (k) to
-        # the values of that column stored in a constant Tensor.
+        # Creates a dictionary mapping from each continuous feature column name (k) to the values of that column stored in a constant Tensor.
         continuous_cols = {k: tf.constant(df[k].values)
                            for k in continuous_features}
 
-        # Creates a dictionary mapping from each categorical feature column name (k)
-        # to the values of that column stored in a tf.SparseTensor.
-        # print [df[k].size for k in categorical_features]
+        # Creates a dictionary mapping from each categorical feature column name (k) to the values of that column stored in a tf.SparseTensor.
         categorical_cols = {k: tf.SparseTensor(
             indices=[[i, 0] for i in range(df[k].size)],
             values=df[k].values,
@@ -73,9 +60,6 @@ def main():
     def train_input_fn():
         return input_fn(train_data)
 
-    def eval_input_fn():
-        return input_fn(val_data)
-
     def test_input_fn():
         return input_fn(test_data, False)
 
@@ -93,12 +77,14 @@ def main():
                                                                       combiner="sum"))
     # DNN-Regressor
     regressor = tf.contrib.learn.DNNRegressor(
-        feature_columns=engineered_features, hidden_units=[200, 200, 200, 100, 100, 100], model_dir=MODEL_DIR, activation_fn=tf.nn.elu)
+        feature_columns=engineered_features, hidden_units=[200, 200, 200, 200, 200, 200, 200, 200], model_dir=MODEL_DIR, activation_fn=tf.nn.relu,
+        optimizer=tf.train.AdagradOptimizer(0.075)
+    )
 
     # Training Our Model
-    step = 100
+    step = 5000
     losses = {'train':[], 'test':[]}
-    for train_time in range(50):
+    for train_time in range(1):
         start_time = time.time()
 
         wrap = regressor.fit(input_fn=train_input_fn, steps=step)
@@ -121,20 +107,8 @@ def main():
     plt.plot(losses['train'], label='Training loss')
     plt.plot(losses['test'], label='Test loss')
     plt.legend()
-    # plt.show()
-
-    # time.sleep(1000)
-    # Evaluating Our Model
-    # print('Evaluating ...')
-    # results = regressor.evaluate(input_fn=eval_input_fn, steps=1)
-    # for key in sorted(results):
-    #     print("%s: %s" % (key, results[key]))
-
-    # test_input_fn = train_input_fn
-    # test_data = train_data
 
     predicted_output = regressor.predict(input_fn=test_input_fn)
-    # for i in predicted_output:  print i
     predicted_output = [i if i > 0 else 0 for i in predicted_output]
     print RMSLE(predicted_output, test_data[LABEL_COLUMN])
 
